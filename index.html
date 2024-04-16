@@ -1,0 +1,278 @@
+<html>
+    <head>
+        
+    </head>
+    <body>
+        <div style="width: 100%; height:400px;">
+            <div id="console" style="width: 100%; border: 1px solid;">
+                Console
+            </div>
+            <input style="width: 100%;" type="text" id="command" name="command" />
+            <div id="" style="height: 100px">
+
+            </div>
+        </div>
+
+        <script>
+            let objects = {
+                'empty':{
+                    'synonyms': ["EMPTY"],
+                    'name': "rien",
+                    'location': 'nulle part',
+                    'description': "Mettre les objets inaccessibles ici",
+                    'closed': false,
+                    'locked': false,
+                    'pickable': false,
+                    'openable': false
+                },
+                'context':{
+                    'synonyms': ["CONTEXT"],
+                    'name': "contexte",
+                    'location': 'ici',
+                    'description': "Tout ce qui est visible actuellement par le joueur doit être dans le contexte, directement ou indirectement",
+                    'closed': false,
+                    'locked': false,
+                    'pickable': false,
+                    'openable': false
+                },
+                'self':{
+                    'synonyms': ["ME", "SE", "M", "SOI", "MOI"],
+                    'name': "vous",
+                    'location': 'context',
+                    'description': "Mais c'est moi !",
+                    'closed': false,
+                    'locked': false,
+                    'pickable': false,
+                    'openable': false
+                },
+                'inventory':{
+                    'synonyms': ["SAC"],
+                    'name': "votre sac",
+                    'location': 'context',
+                    'description': "C'est mon inventaire",
+                    'closed': false,
+                    'locked': false,
+                    'pickable': false,
+                    'openable': false
+                },
+                'salon':{
+                    'synonyms': ["SALON"],
+                    'name': "le salon",
+                    'location': 'context',
+                    'description': "Un joli salon avec un canapé",
+                    'south': 'cuisine'
+                },
+                'canape':{
+                    'synonyms': ["CANAPE", "FAUTEUILLE", "DIVAN"],
+                    'name': "le canapé",
+                    'location': 'salon',
+                    'description': "Un canapé confortable",
+                    'closed': false,
+                    'locked': false,
+                    'pickable': false,
+                    'openable': false
+                },
+                'cuisine':{
+                    'synonyms': ["CUISINE"],
+                    'name': "la cuisine",
+                    'location': 'empty',
+                    'description': "Une cuisine. Vous remarquez un tiroir rouge",
+                    'north': 'salon'
+                },
+                'tiroir':{
+                    'synonyms': ["TIROIR", "MEUBLE", "BUFFET"],
+                    'name': "le tiroir",
+                    'location': 'cuisine',
+                    'description': "Un petit tiroir rouge",
+                    'closed': true,
+                    'openable': true
+                },
+                'couteau':{
+                    'synonyms': ["CANAPE", "FAUTEUILLE", "DIVAN"],
+                    'name': "le couteau",
+                    'location': 'tiroir',
+                    'description': "Un petit tiroir rouge",
+                    'pickable': true
+                }
+            };
+
+            // Vérifie si un mot est un synonyme d'un objet donné
+            function matchObject(word, objectIndex) {
+                return objects[objectIndex].synonyms.indexOf(word) > -1;
+            }
+
+            // Retourne la clé de l'objet désigné par un mot donné
+            function getObjectBySynonym(word) {
+                for(let key in objects) {
+                    if (matchObject(word, key)) {
+                        return key;
+                    }
+                }
+                
+                return null;
+            }
+
+            // Vérifie si le mot désigne le personnage joueur
+            function isSelf(word) {
+                return getObjectBySynonym(word) === 'self';
+            }
+
+            // Verbes
+            // liste des verbes et de leurs synonymes
+            const verbs = [
+                { // Empty
+                    'synonyms':[""],
+                    'message': "Désolé,je n'ai rien compris"
+                },
+                { // Nord
+                    'synonyms':["NORD", "N", "AVAN"],
+                    'message': "Impossible d'aller vers le nord"
+                },
+                { // Sud
+                    'synonyms':["SUD", "S", "RECU", "ARRI"],
+                    'message': "Impossible d'aller vers le sud"
+                },
+                { // Est
+                    'synonyms':["EST", "E", "DROI"],
+                    'message': "Impossible d'aller vers l'est"
+                },
+                { // Ouest
+                    'synonyms':["OUES", "O", "GAUC"],
+                    'message': "Impossible d'aller vers l'ouest"
+                },
+                { // Regarder
+                    'synonyms':["REGA", "EXAM", "VOIR", "X"],
+                    'message': "Circulez, y'a rien à voir !"
+                }, 
+                { // Fouiller
+                    'synonyms':["FOUI", "CHER", "LIST"],
+                    'message': "Rien d'intéressant"
+                },
+                { // Prendre
+                    'synonyms':["PREN"],
+                    'message': "Pas vu, pas pris"
+                },
+                { // Utiliser
+                    'synonyms':["UTIL"],
+                    'message': "C'est sans effet"
+                },
+                { // Poser
+                    'synonyms':["POSE","METT"],
+                    'message': "C'est l'heure de la pose"
+                },
+                { // Inventaire
+                    'synonyms':["INVE", "I"],
+                    'message': "Votre inventaire"
+                },
+                { // Ouvrir
+                    'synonyms':["OUVR"],
+                    'message': "Ça ne s'ouvre pas"
+                },
+                { // Fermer
+                    'synonyms':["FERM"],
+                    'message': "Impossible de fermer ça"
+                },
+                { // Lire
+                    'synonyms':["LIRE", "CONS"],
+                    'message': "Il n'y a rien à lire"
+                },
+                { // Parler
+                    'synonyms':["PARL", "DISC", "APPE", "DIRE", "DEMA", "INTE"],
+                    'message': "Vous savez à qui vous parlez ?"
+                },
+                { // Attendre
+                    'synonyms':["ATTE", "ATT"],
+                    'message': "Et maintenant, sans attendre..."
+                },
+                { // Deverrouiller
+                    'synonyms':["DEVE"],
+                    'message': "Ça ne marche pas"
+                },
+                { // Verrouiller
+                    'synonyms':["VERR", "VERO"],
+                    'message': "Ça ne marche pas"
+                },
+            ];
+
+            let transcript = [];
+            const consoleDiv = document.querySelector("#console");
+            const commandInput = document.querySelector("#command");
+
+            commandInput.focus();
+
+            // Gestion de la validation de la commande
+            commandInput.addEventListener("keyup", (event) => {
+                if (event.key === "Enter") {
+                    if (parseCommand(commandInput.value)) {
+                        transcript.push(commandInput.value);
+                    } else {
+                        print(`La commande "${commandInput.value}" n'a pas pu être interpretée`);
+                    }
+                    
+                    commandInput.value = "";
+                }
+
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+
+            // Liste des mots à ignorer lors de la phase d'analyse syntaxique
+            const noiseWords = [ "", "DE", "D", "DU", "DES", "LES", "LE", "LA", "L", "AVEC", "DANS", "SUR", "TOUS", "TOUT", "ET", "UN", "UNE", "A", "AU", "MON", "MA", "MES", "SON", "SA", "SES", "TON", "TA", "TES", "POUR", "EN", "FAIRE", "FAIT", "FAIS", "FAITES", "JE", "J" ];
+
+            // Suppression des mots superflus de la phrase
+            function removeNoiseWords(words) {
+                // Supprimer les éléments qui apparaissent dans la liste donnée
+                for (var i = 0; i < noiseWords.length; i++) {
+                    var noiseWord = noiseWords[i];
+                    var index = words.indexOf(noiseWord);
+                    while (index !== -1) {
+                        words.splice(index, 1);
+                        index = words.indexOf(noiseWord);
+                    }
+                }
+
+                return words;
+            }
+
+            function parseCommand(commandString) {
+                commandString = removeAccents(commandString).toUpperCase();
+
+                let command = {
+                    "verb": "",
+                    "object1": "",
+                    "object2": ""
+                };
+                var words = commandString.split(/[ '_.,;:]/);
+
+                words = removeNoiseWords(words);
+
+                // Si le premier mot désigne le joueur
+                // ça sera l'objet 1 et le verbe 
+                if(isSelf(words[0])) {
+                    command.verb = words[1];
+                    command.object1 = words[0];
+                } else {
+                    command.verb = words[0];
+                    command.object1 = words[1];
+                }
+                command.object2 = words[2];
+
+                console.log(commandString);
+                console.log(command);
+
+                return false;
+            }
+
+            function print(message) {
+                let p = document.createElement("p");
+                p.innerHTML = message;
+                consoleDiv.append(p);
+            }
+
+            // Fonction pour supprimer les accents d'une chaîne
+            function removeAccents(str) {
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+
+        </script>
+    </body>
+</html>
