@@ -15,20 +15,10 @@
 
         <script>
             let objects = {
-                'empty':{
-                    'synonyms': ["EMPTY"],
-                    'name': "rien",
-                    'location': 'nulle part',
-                    'description': "Mettre les objets inaccessibles ici",
-                    'closed': false,
-                    'locked': false,
-                    'pickable': false,
-                    'openable': false
-                },
                 'context':{
                     'synonyms': ["CONTEXT"],
                     'name': "contexte",
-                    'location': 'ici',
+                    'location': null,
                     'description': "Tout ce qui est visible actuellement par le joueur doit être dans le contexte, directement ou indirectement",
                     'closed': false,
                     'locked': false,
@@ -75,7 +65,7 @@
                 'cuisine':{
                     'synonyms': ["CUISINE"],
                     'name': "la cuisine",
-                    'location': 'empty',
+                    'location': null,
                     'description': "Une cuisine. Vous remarquez un tiroir rouge",
                     'north': 'salon'
                 },
@@ -87,11 +77,11 @@
                     'closed': true,
                     'openable': true
                 },
-                'couteau':{
-                    'synonyms': ["CANAPE", "FAUTEUILLE", "DIVAN"],
-                    'name': "le couteau",
+                'clef':{
+                    'synonyms': ["CLEF", "CLE"],
+                    'name': "la clé",
                     'location': 'tiroir',
-                    'description': "Un petit tiroir rouge",
+                    'description': "Une petite clé rouillée",
                     'pickable': true
                 }
             };
@@ -117,82 +107,89 @@
                 return getObjectBySynonym(word) === 'self';
             }
 
+            // Retourne l'index de la localisation d'un objet donné
+            function getLocation(objectIndex) {
+                return objects[objects[objectIndex].location];
+            }
+
+            // Vérifie si un objet est dans un autre objet récursivement
+            // La fonction prend en compte les objets fermés
+            function findObjectIn(objectIndex, locationIndex) {
+                if (objectIndex === locationIndex) {
+                    return true;
+                }
+
+                const containerIndex = objects[objectIndex].location;
+                if (containerIndex) {
+                    if (objects[containerIndex].closed) {
+                        return false;
+                    }
+                    return findObjectIn(containerIndex, locationIndex);
+                }
+
+                return false;
+            }
+
+            // Exemple d'utilisation
+            let objectExample = findObjectIn(getObjectBySynonym('CLEF'), 'cuisine');
+            console.log(objectExample);
+
             // Verbes
             // liste des verbes et de leurs synonymes
-            const verbs = [
-                { // Empty
+            const verbs = {
+                "": { // default
                     'synonyms':[""],
-                    'message': "Désolé,je n'ai rien compris"
+                    'message': "Je n'ai pas compris"
                 },
-                { // Nord
+                "nord": { // Nord
                     'synonyms':["NORD", "N", "AVAN"],
                     'message': "Impossible d'aller vers le nord"
                 },
-                { // Sud
+                "sud": { // Sud
                     'synonyms':["SUD", "S", "RECU", "ARRI"],
                     'message': "Impossible d'aller vers le sud"
                 },
-                { // Est
+                "est": { // Est
                     'synonyms':["EST", "E", "DROI"],
                     'message': "Impossible d'aller vers l'est"
                 },
-                { // Ouest
+                "ouest": { // Ouest
                     'synonyms':["OUES", "O", "GAUC"],
                     'message': "Impossible d'aller vers l'ouest"
                 },
-                { // Regarder
+                "regarder": { // Regarder
                     'synonyms':["REGA", "EXAM", "VOIR", "X"],
                     'message': "Circulez, y'a rien à voir !"
                 }, 
-                { // Fouiller
+                "fouiller": { // Fouiller
                     'synonyms':["FOUI", "CHER", "LIST"],
                     'message': "Rien d'intéressant"
                 },
-                { // Prendre
-                    'synonyms':["PREN"],
-                    'message': "Pas vu, pas pris"
-                },
-                { // Utiliser
-                    'synonyms':["UTIL"],
-                    'message': "C'est sans effet"
-                },
-                { // Poser
-                    'synonyms':["POSE","METT"],
-                    'message': "C'est l'heure de la pose"
-                },
-                { // Inventaire
+                "inventaire": { // Inventaire
                     'synonyms':["INVE", "I"],
                     'message': "Votre inventaire"
                 },
-                { // Ouvrir
+                "prendre": { // Prendre
+                    'synonyms':["PREN"],
+                    'message': "Pas vu, pas pris"
+                },
+                "poser": { // Poser
+                    'synonyms':["POSE","METT"],
+                    'message': "C'est l'heure de la pose"
+                },
+                "utiliser": { // Utiliser
+                    'synonyms':["UTIL"],
+                    'message': "C'est sans effet"
+                },
+                "ouvrir": { // Ouvrir
                     'synonyms':["OUVR"],
                     'message': "Ça ne s'ouvre pas"
                 },
-                { // Fermer
+                "fermer": { // Fermer
                     'synonyms':["FERM"],
                     'message': "Impossible de fermer ça"
                 },
-                { // Lire
-                    'synonyms':["LIRE", "CONS"],
-                    'message': "Il n'y a rien à lire"
-                },
-                { // Parler
-                    'synonyms':["PARL", "DISC", "APPE", "DIRE", "DEMA", "INTE"],
-                    'message': "Vous savez à qui vous parlez ?"
-                },
-                { // Attendre
-                    'synonyms':["ATTE", "ATT"],
-                    'message': "Et maintenant, sans attendre..."
-                },
-                { // Deverrouiller
-                    'synonyms':["DEVE"],
-                    'message': "Ça ne marche pas"
-                },
-                { // Verrouiller
-                    'synonyms':["VERR", "VERO"],
-                    'message': "Ça ne marche pas"
-                },
-            ];
+            };
 
             let transcript = [];
             const consoleDiv = document.querySelector("#console");
