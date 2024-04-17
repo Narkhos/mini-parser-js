@@ -5,7 +5,7 @@
     <body>
         <div style="width: 100%; height:400px;">
             <div id="console" style="width: 100%; border: 1px solid;">
-                Console
+                Bienvenue dans ce tutoriel pour apprendre les bases de la programmation d'un moteur de jeu à analyseur syntaxique simple. Vous pouvez modifier ce petit exemple de démonstration à votre convenance. AMUSEZ-VOUS BIEN !
             </div>
             <input style="width: 100%;" type="text" id="command" name="command" />
             <div id="" style="height: 100px">
@@ -19,55 +19,39 @@
                     'synonyms': ["CONTEXT"],
                     'name': "contexte",
                     'location': null,
-                    'description': "Tout ce qui est visible actuellement par le joueur doit être dans le contexte, directement ou indirectement",
-                    'closed': false,
-                    'locked': false,
-                    'pickable': false,
-                    'openable': false
+                    'description': "Tout ce qui est visible actuellement par le joueur doit être dans le contexte, directement ou indirectement"
                 },
                 'self':{
                     'synonyms': ["ME", "SE", "M", "SOI", "MOI"],
                     'name': "vous",
                     'location': 'context',
-                    'description': "Mais c'est moi !",
-                    'closed': false,
-                    'locked': false,
-                    'pickable': false,
-                    'openable': false
+                    'description': "Mais c'est moi !"
                 },
-                'inventory':{
+                'inventaire':{
                     'synonyms': ["SAC"],
                     'name': "votre sac",
                     'location': 'context',
-                    'description': "C'est mon inventaire",
-                    'closed': false,
-                    'locked': false,
-                    'pickable': false,
-                    'openable': false
+                    'description': "C'est mon inventaire"
                 },
                 'salon':{
                     'synonyms': ["SALON"],
                     'name': "le salon",
                     'location': 'context',
                     'description': "Un joli salon avec un canapé",
-                    'south': 'cuisine'
+                    'sud': 'cuisine'
                 },
                 'canape':{
                     'synonyms': ["CANAPE", "FAUTEUILLE", "DIVAN"],
                     'name': "le canapé",
                     'location': 'salon',
-                    'description': "Un canapé confortable",
-                    'closed': false,
-                    'locked': false,
-                    'pickable': false,
-                    'openable': false
+                    'description': "Un canapé confortable"
                 },
                 'cuisine':{
                     'synonyms': ["CUISINE"],
                     'name': "la cuisine",
                     'location': null,
                     'description': "Une cuisine. Vous remarquez un tiroir rouge",
-                    'north': 'salon'
+                    'nord': 'salon'
                 },
                 'tiroir':{
                     'synonyms': ["TIROIR", "MEUBLE", "BUFFET"],
@@ -75,14 +59,19 @@
                     'location': 'cuisine',
                     'description': "Un petit tiroir rouge",
                     'closed': true,
-                    'openable': true
+                    'openable': true,
                 },
-                'clef':{
-                    'synonyms': ["CLEF", "CLE"],
-                    'name': "la clé",
+                'pomme':{
+                    'synonyms': ["POMME", "FRUIT"],
+                    'name': "la pomme",
                     'location': 'tiroir',
-                    'description': "Une petite clé rouillée",
-                    'pickable': true
+                    'description': "Une belle pomme rouge",
+                    'pickable': true,
+                    'manger': (command) => {
+                        print("Vous vous régalez");
+                        objects["pomme"].location = null;
+                        return true;
+                    }
                 }
             };
 
@@ -92,7 +81,7 @@
             }
 
             // Retourne la clé de l'objet désigné par un mot donné
-            function getObjectBySynonym(word) {
+            function getObjectByWord(word) {
                 for(let key in objects) {
                     if (matchObject(word, key)) {
                         return key;
@@ -104,7 +93,7 @@
 
             // Vérifie si le mot désigne le personnage joueur
             function isSelf(word) {
-                return getObjectBySynonym(word) === 'self';
+                return getObjectByWord(word) === 'self';
             }
 
             // Retourne l'index de la localisation d'un objet donné
@@ -115,6 +104,9 @@
             // Vérifie si un objet est dans un autre objet récursivement
             // La fonction prend en compte les objets fermés
             function findObjectIn(objectIndex, locationIndex) {
+
+                if (!objectIndex) return false;
+
                 if (objectIndex === locationIndex) {
                     return true;
                 }
@@ -131,7 +123,7 @@
             }
 
             // Exemple d'utilisation
-            let objectExample = findObjectIn(getObjectBySynonym('CLEF'), 'cuisine');
+            let objectExample = findObjectIn(getObjectByWord('CLEF'), 'cuisine');
             console.log(objectExample);
 
             // Verbes
@@ -139,57 +131,88 @@
             const verbs = {
                 "": { // default
                     'synonyms':[""],
-                    'message': "Je n'ai pas compris"
+                    'default': "Je n'ai pas compris"
                 },
                 "nord": { // Nord
                     'synonyms':["NORD", "N", "AVAN"],
-                    'message': "Impossible d'aller vers le nord"
+                    'default': "Impossible d'aller vers le nord"
                 },
                 "sud": { // Sud
                     'synonyms':["SUD", "S", "RECU", "ARRI"],
-                    'message': "Impossible d'aller vers le sud"
+                    'default': "Impossible d'aller vers le sud"
                 },
                 "est": { // Est
                     'synonyms':["EST", "E", "DROI"],
-                    'message': "Impossible d'aller vers l'est"
+                    'default': "Impossible d'aller vers l'est"
                 },
                 "ouest": { // Ouest
                     'synonyms':["OUES", "O", "GAUC"],
-                    'message': "Impossible d'aller vers l'ouest"
+                    'default': "Impossible d'aller vers l'ouest"
                 },
                 "regarder": { // Regarder
-                    'synonyms':["REGA", "EXAM", "VOIR", "X"],
-                    'message': "Circulez, y'a rien à voir !"
+                    'synonyms':["REGA"],
+                    'default': "Circulez, y'a rien à voir !"
                 }, 
+                "examiner": { // Examiner
+                    'synonyms':["EXAM", "X"],
+                    'default': "Rien de particulier"
+                },
                 "fouiller": { // Fouiller
                     'synonyms':["FOUI", "CHER", "LIST"],
-                    'message': "Rien d'intéressant"
+                    'default': "Rien d'intéressant"
                 },
                 "inventaire": { // Inventaire
                     'synonyms':["INVE", "I"],
-                    'message': "Votre inventaire"
+                    'default': "Votre inventaire"
                 },
                 "prendre": { // Prendre
                     'synonyms':["PREN"],
-                    'message': "Pas vu, pas pris"
+                    'default': "Pas vu, pas pris"
                 },
                 "poser": { // Poser
                     'synonyms':["POSE","METT"],
-                    'message': "C'est l'heure de la pose"
+                    'default': "Vous ne pouvez pas poser ça"
                 },
                 "utiliser": { // Utiliser
                     'synonyms':["UTIL"],
-                    'message': "C'est sans effet"
+                    'default': "C'est sans effet"
                 },
                 "ouvrir": { // Ouvrir
                     'synonyms':["OUVR"],
-                    'message': "Ça ne s'ouvre pas"
+                    'default': "Ça ne s'ouvre pas"
                 },
                 "fermer": { // Fermer
                     'synonyms':["FERM"],
-                    'message': "Impossible de fermer ça"
+                    'default': "Impossible de fermer ça"
+                },
+                "manger": { // Manger
+                    'synonyms':["MANG"],
+                    'default': "C'est immangeable"
+                },
+                "transcript": { // Transcript
+                    'synonyms':["TRAN"],
+                    'default': "Transcription des commandes"
                 },
             };
+
+            // Vérifie si un mot est un synonyme d'un verbe donné
+            function matchVerb(word, verbIndex) {
+                return verbs[verbIndex].synonyms.indexOf(word) > -1;
+            }
+
+            // Retourne la clé du verbe désigné par un mot donné
+            function getVerbByWord(word) {
+                if (!word) return null;
+
+                word = word.substr(0, 4);
+                for(let key in verbs) {
+                    if (matchVerb(word, key)) {
+                        return key;
+                    }
+                }
+                
+                return null;
+            }
 
             let transcript = [];
             const consoleDiv = document.querySelector("#console");
@@ -230,13 +253,133 @@
                 return words;
             }
 
+            let currentLocation = null;
+
+            function changeLocation(locationIndex) {
+                if (currentLocation) {
+                    objects[currentLocation].location = null;
+                }
+
+                currentLocation = locationIndex;
+                objects[currentLocation].location = 'context';
+                print(objects[currentLocation].description);
+            }
+
+            function displayTranscript() {
+                for (let key in transcript) {
+                    print(`${key} - ${transcript[key]}`)
+                }
+            }
+
+            function displayObjectsIn(location, title, defaultMessage = "rien") {
+                let count = 0;
+                print(title);
+                for(let key in objects) {
+                    if (objects[key].location == location) {
+                        print("- " + objects[key].name);
+                        count ++;
+                    }
+                }
+
+                if (count == 0) {
+                    print("- " + defaultMessage);
+                }
+            }
+
+            function executeCommand(command) {
+                if (command.verb) {
+                    // Verbes avec au moins 1 objet
+                    if (command.object1) {
+                        if (objects[command.object1][command.verb]) {
+                            return objects[command.object1][command.verb](command);
+                        } else {
+                            // verbes à 2 objets
+                            if (command.object2) {
+                                switch(command.verb) {
+                                    case "poser":
+                                        if (objects[command.object1].pickable && objects[command.object1].location == "inventaire") {
+                                            objects[command.object1].location = command.object2;
+                                            print(`Vous mettez ${objects[command.object1].name} dans ${objects[command.object2].name}`);
+                                            return true
+                                        }
+                                }
+                            } else { // verbes à 1 objet
+                                switch(command.verb) {
+                                    case "examiner":
+                                        print(objects[command.object1].description);
+                                        return true;
+                                    case "fouiller":
+                                        if (objects[command.object1].closed) {
+                                            print(`${objects[command.object1].name} est fermé`);
+                                        } else {
+                                            displayObjectsIn(command.object1, `${objects[command.object1].name} contient :`);
+                                        }
+                                        return true;
+                                    case "prendre":
+                                        if (objects[command.object1].pickable && objects[command.object1].location != "inventaire") {
+                                            objects[command.object1].location = "inventaire";
+                                            print(`Vous prenez ${objects[command.object1].name}`);
+                                            return true
+                                        }
+                                        print(`vous ne pouvez pas prendre ${objects[command.object1].name}`);
+                                        return true;
+                                    case "ouvrir":
+                                        if (objects[command.object1].openable && objects[command.object1].closed) {
+                                            objects[command.object1].closed = false;
+                                            print(`Vous ouvrez ${objects[command.object1].name}`);
+                                            return true;
+                                        }
+                                    case "fermer":
+                                        if (objects[command.object1].openable && !objects[command.object1].closed) {
+                                            objects[command.object1].closed = true;
+                                            print(`Vous fermez ${objects[command.object1].name}`);
+                                            return true;
+                                        }
+
+                                }
+                            }
+
+                            print(verbs[command.verb].default);
+                            return true;
+                        }
+                    } else { // verbes sans objet
+                        switch(command.verb) {
+                            case "nord":
+                            case "sud":
+                            case "est":
+                            case "ouest":
+                                if (objects[currentLocation][command.verb]) {
+                                    changeLocation(objects[currentLocation][command.verb]);
+                                    return true;
+                                }
+                                break;
+                            case "regarder":
+                                print(objects[currentLocation].description);
+                                return true;
+                            case "inventaire":
+                                displayObjectsIn("inventaire", "Vos possessions :");
+                                return true;
+                            
+                            case "transcript":
+                                displayTranscript();
+                                return true;
+                        }
+                    }
+                    print(verbs[command.verb].default);
+                    return true;
+                } else {
+                    print("Je ne connais pas ce verbe");
+                    return true;
+                }
+            }
+
             function parseCommand(commandString) {
                 commandString = removeAccents(commandString).toUpperCase();
 
                 let command = {
-                    "verb": "",
-                    "object1": "",
-                    "object2": ""
+                    "verb": null,
+                    "object1": null,
+                    "object2": null
                 };
                 var words = commandString.split(/[ '_.,;:]/);
 
@@ -245,18 +388,25 @@
                 // Si le premier mot désigne le joueur
                 // ça sera l'objet 1 et le verbe 
                 if(isSelf(words[0])) {
-                    command.verb = words[1];
-                    command.object1 = words[0];
+                    command.verb = getVerbByWord(words[1]);
+                    command.object1 = getObjectByWord(words[0]);
                 } else {
-                    command.verb = words[0];
-                    command.object1 = words[1];
+                    command.verb = getVerbByWord(words[0]);
+                    command.object1 = getObjectByWord(words[1]);
                 }
-                command.object2 = words[2];
 
-                console.log(commandString);
-                console.log(command);
+                command.object2 = getObjectByWord(words[2]);
 
-                return false;
+
+                if (!findObjectIn(command.object1, "context")) {
+                    command.object1 = null;
+                }
+
+                if (!findObjectIn(command.object2, "context")) {
+                    command.object2 = null;
+                }
+                
+                return executeCommand(command);
             }
 
             function print(message) {
@@ -264,6 +414,12 @@
                 p.innerHTML = message;
                 consoleDiv.append(p);
             }
+
+            function initGame() {
+                changeLocation('salon');
+            }
+
+            initGame();
 
             // Fonction pour supprimer les accents d'une chaîne
             function removeAccents(str) {
