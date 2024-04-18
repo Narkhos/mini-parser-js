@@ -81,7 +81,7 @@
                     'description': "Une belle pomme rouge",
                     'pickable': true,
                     'manger': (command) => {
-                        print("Vous vous régalez");
+                        println("Vous vous régalez");
                         objects["pomme"].location = null;
                         return true;
                     }
@@ -248,7 +248,7 @@
 
                 currentLocation = locationIndex;
                 objects[currentLocation].location = 'context';
-                print(objects[currentLocation].description);
+                println(objects[currentLocation].description);
             }
 
             function executeCommand(command) {
@@ -264,18 +264,18 @@
                                     case "poser":
                                         if (objects[command.object1].pickable && objects[command.object1].location == "inventaire") {
                                             objects[command.object1].location = command.object2;
-                                            print(`Vous mettez ${objects[command.object1].name} dans ${objects[command.object2].name}`);
+                                            println(`Vous mettez ${objects[command.object1].name} dans ${objects[command.object2].name}`);
                                             return true
                                         }
                                 }
                             } else { // verbes à 1 objet
                                 switch(command.verb) {
                                     case "examiner":
-                                        print(objects[command.object1].description);
+                                        println(objects[command.object1].description);
                                         return true;
                                     case "fouiller":
                                         if (objects[command.object1].closed) {
-                                            print(`${objects[command.object1].name} est fermé`);
+                                            println(`${objects[command.object1].name} est fermé`);
                                         } else {
                                             displayObjectsIn(command.object1, `${objects[command.object1].name} contient :`);
                                         }
@@ -283,28 +283,28 @@
                                     case "prendre":
                                         if (objects[command.object1].pickable && objects[command.object1].location != "inventaire") {
                                             objects[command.object1].location = "inventaire";
-                                            print(`Vous prenez ${objects[command.object1].name}`);
+                                            println(`Vous prenez ${objects[command.object1].name}`);
                                             return true
                                         }
-                                        print(`vous ne pouvez pas prendre ${objects[command.object1].name}`);
+                                        println(`vous ne pouvez pas prendre ${objects[command.object1].name}`);
                                         return true;
                                     case "ouvrir":
                                         if (objects[command.object1].openable && objects[command.object1].closed) {
                                             objects[command.object1].closed = false;
-                                            print(`Vous ouvrez ${objects[command.object1].name}`);
+                                            println(`Vous ouvrez ${objects[command.object1].name}`);
                                             return true;
                                         }
                                     case "fermer":
                                         if (objects[command.object1].openable && !objects[command.object1].closed) {
                                             objects[command.object1].closed = true;
-                                            print(`Vous fermez ${objects[command.object1].name}`);
+                                            println(`Vous fermez ${objects[command.object1].name}`);
                                             return true;
                                         }
 
                                 }
                             }
 
-                            print(verbs[command.verb].default);
+                            println(verbs[command.verb].default);
                             return true;
                         }
                     } else { // verbes sans objet
@@ -319,7 +319,7 @@
                                 }
                                 break;
                             case "regarder":
-                                print(objects[currentLocation].description);
+                                println(objects[currentLocation].description);
                                 return true;
                             case "inventaire":
                                 displayObjectsIn("inventaire", "Vos possessions :");
@@ -330,10 +330,10 @@
                                 return true;
                         }
                     }
-                    print(verbs[command.verb].default);
+                    println(verbs[command.verb].default);
                     return true;
                 } else {
-                    print("Je ne connais pas ce verbe");
+                    println("Je ne connais pas ce verbe");
                     return true;
                 }
             }
@@ -407,7 +407,7 @@
             // FONCTIONS D'AFFICHAGE
 
             // Affichage d'une message dans la console du jeu
-            function print(message) {
+            function println(message) {
                 let p = document.createElement("p");
                 p.innerHTML = message;
                 consoleDiv.append(p);
@@ -415,22 +415,22 @@
 
             function displayTranscript() {
                 for (let key in transcript) {
-                    print(`${key} - ${transcript[key]}`)
+                    println(`${key} - ${transcript[key]}`)
                 }
             }
 
             function displayObjectsIn(location, title, defaultMessage = "rien") {
                 let count = 0;
-                print(title);
+                println(title);
                 for(let key in objects) {
                     if (objects[key].location == location) {
-                        print("- " + objects[key].name);
+                        println("- " + objects[key].name);
                         count ++;
                     }
                 }
 
                 if (count == 0) {
-                    print("- " + defaultMessage);
+                    println("- " + defaultMessage);
                 }
             }
 
@@ -460,7 +460,7 @@
                     if (parseCommand(commandInput.value)) {
                         transcript.push(commandInput.value);
                     } else {
-                        print(`La commande "${commandInput.value}" n'a pas pu être interpretée`);
+                        println(`La commande "${commandInput.value}" n'a pas pu être interpretée`);
                     }
                     
                     commandInput.value = "";

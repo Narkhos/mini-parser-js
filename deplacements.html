@@ -1,0 +1,156 @@
+<html>
+    <head></head>
+    <body>
+        <div style="width: 100%; height:400px;">
+            <div id="console" style="width: 100%; border: 1px solid;">
+                Bienvenue dans ce tutoriel pour apprendre les bases de la programmation d'un moteur de jeu à analyseur syntaxique simple. Vous pouvez modifier ce petit exemple de démonstration à votre convenance. AMUSEZ-VOUS BIEN !
+            </div>
+            <input style="width: 100%;" type="text" id="command" name="command" />
+            <div id="" style="height: 100px">
+
+            </div>
+        </div>
+
+        <script>
+            // Supprime les accents d'une chaîne
+            function removeAccents(str) {
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+
+            // DIV pour afficher le texte du jeu
+            const consoleDiv = document.querySelector("#console");
+
+            // Affichage d'une message dans la console du jeu
+            function println(message) {
+                let p = document.createElement("p");
+                p.innerHTML = message;
+                consoleDiv.append(p);
+            }
+
+            // INPUT de saisie des commandes 
+            const commandInput = document.querySelector("#command");
+
+            commandInput.focus();
+
+            // Gestion de la validation de la commande
+            commandInput.addEventListener("keyup", (event) => {
+                if (event.key === "Enter") {
+                    executeCommand(parseCommand(commandInput.value));
+
+                    commandInput.value = "";
+                }
+
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+
+            // Exécution de la commande identifiée par parseCommand()
+            function executeCommand(verb) {
+                if (verb) {
+                        switch(verb) {
+                            case "nord":
+                            case "sud":
+                            case "est":
+                            case "ouest":
+                                if (objects[currentLocation][verb]) {
+                                    changeLocation(objects[currentLocation][verb]);
+                                    return;
+                                }
+                                break;
+                        }
+                    println(verbs[verb].default);
+                    return;
+                } else {
+                    println("Je ne connais pas ce verbe");
+                    return;
+                }
+            }
+
+            // Vérifie si un mot est un synonyme d'un verbe donné
+            function matchVerb(word, verbIndex) {
+                return verbs[verbIndex].synonyms.indexOf(word) > -1;
+            }
+
+            // Retourne la clé du verbe désigné par un mot donné
+            function getVerbByWord(word) {
+                if (!word) return null;
+
+                word = word.substr(0, 4);
+                for(let key in verbs) {
+                    if (matchVerb(word, key)) {
+                        return key;
+                    }
+                }
+                
+                return null;
+            }
+
+            function parseCommand(commandString) {
+                commandString = removeAccents(commandString).toUpperCase();
+
+                let verb = null
+                var words = commandString.split(/[ '_.,;:]/);
+
+                if (words.length > 0) {
+                    verb = getVerbByWord(words[0]);
+                }
+                
+                return verb;
+            }
+
+            // Objets et lieux du monde
+            let objects = {
+                'salon':{
+                    'synonyms': ["SALON"],
+                    'name': "le salon",
+                    'location': 'context',
+                    'description': "Un joli salon",
+                    'sud': 'cuisine'
+                },
+                'cuisine':{
+                    'synonyms': ["CUISINE"],
+                    'name': "la cuisine",
+                    'location': null,
+                    'description': "Une cuisine.",
+                    'nord': 'salon'
+                }
+            };
+
+            // liste des verbes et de leurs synonymes
+            const verbs = {
+                "nord": { // Nord
+                    'synonyms':["NORD", "N", "AVAN"],
+                    'default': "Impossible d'aller vers le nord"
+                },
+                "sud": { // Sud
+                    'synonyms':["SUD", "S", "RECU", "ARRI"],
+                    'default': "Impossible d'aller vers le sud"
+                },
+                "est": { // Est
+                    'synonyms':["EST", "E", "DROI"],
+                    'default': "Impossible d'aller vers l'est"
+                },
+                "ouest": { // Ouest
+                    'synonyms':["OUES", "O", "GAUC"],
+                    'default': "Impossible d'aller vers l'ouest"
+                }
+            };
+
+            // Lieu dans lequel le joueur se trouve actuellement
+            let currentLocation = null;
+
+            // Changement de lieu
+            function changeLocation(locationIndex) {
+                if (currentLocation) {
+                    objects[currentLocation].location = null;
+                }
+
+                currentLocation = locationIndex;
+                objects[currentLocation].location = 'context';
+                println(objects[currentLocation].description);
+            }
+
+            changeLocation('salon');
+
+        </script>
+    </body>
+</html>
