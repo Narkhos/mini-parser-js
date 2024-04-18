@@ -1,7 +1,5 @@
 <html>
-    <head>
-        
-    </head>
+    <head></head>
     <body>
         <div style="width: 100%; height:400px;">
             <div id="console" style="width: 100%; border: 1px solid;">
@@ -14,6 +12,21 @@
         </div>
 
         <script>
+            //////////////////////////////////
+            // FONCTIONS UTILES
+
+            // Supprime les accents d'une chaîne
+            function removeAccents(str) {
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+
+            //
+            //////////////////////////////////
+
+            //////////////////////////////////
+            // BASE DE DONNEES
+
+            // Objets et lieux du monde
             let objects = {
                 'context':{
                     'synonyms': ["CONTEXT"],
@@ -75,58 +88,6 @@
                 }
             };
 
-            // Vérifie si un mot est un synonyme d'un objet donné
-            function matchObject(word, objectIndex) {
-                return objects[objectIndex].synonyms.indexOf(word) > -1;
-            }
-
-            // Retourne la clé de l'objet désigné par un mot donné
-            function getObjectByWord(word) {
-                for(let key in objects) {
-                    if (matchObject(word, key)) {
-                        return key;
-                    }
-                }
-                
-                return null;
-            }
-
-            // Vérifie si le mot désigne le personnage joueur
-            function isSelf(word) {
-                return getObjectByWord(word) === 'self';
-            }
-
-            // Retourne l'index de la localisation d'un objet donné
-            function getLocation(objectIndex) {
-                return objects[objects[objectIndex].location];
-            }
-
-            // Vérifie si un objet est dans un autre objet récursivement
-            // La fonction prend en compte les objets fermés
-            function findObjectIn(objectIndex, locationIndex) {
-
-                if (!objectIndex) return false;
-
-                if (objectIndex === locationIndex) {
-                    return true;
-                }
-
-                const containerIndex = objects[objectIndex].location;
-                if (containerIndex) {
-                    if (objects[containerIndex].closed) {
-                        return false;
-                    }
-                    return findObjectIn(containerIndex, locationIndex);
-                }
-
-                return false;
-            }
-
-            // Exemple d'utilisation
-            let objectExample = findObjectIn(getObjectByWord('CLEF'), 'cuisine');
-            console.log(objectExample);
-
-            // Verbes
             // liste des verbes et de leurs synonymes
             const verbs = {
                 "": { // default
@@ -195,6 +156,66 @@
                 },
             };
 
+            //
+            //////////////////////////////////
+
+            //////////////////////////////////
+            // GESTION DES OBJETS
+
+            // Vérifie si un mot est un synonyme d'un objet donné
+            function matchObject(word, objectIndex) {
+                return objects[objectIndex].synonyms.indexOf(word) > -1;
+            }
+
+            // Retourne la clé de l'objet désigné par un mot donné
+            function getObjectByWord(word) {
+                for(let key in objects) {
+                    if (matchObject(word, key)) {
+                        return key;
+                    }
+                }
+                
+                return null;
+            }
+
+            // Vérifie si le mot désigne le personnage joueur
+            function isSelf(word) {
+                return getObjectByWord(word) === 'self';
+            }
+
+            // Retourne l'index de la localisation d'un objet donné
+            function getLocation(objectIndex) {
+                return objects[objects[objectIndex].location];
+            }
+
+            // Vérifie si un objet est dans un autre objet récursivement
+            // La fonction prend en compte les objets fermés
+            function findObjectIn(objectIndex, locationIndex) {
+
+                if (!objectIndex) return false;
+
+                if (objectIndex === locationIndex) {
+                    return true;
+                }
+
+                const containerIndex = objects[objectIndex].location;
+                if (containerIndex) {
+                    if (objects[containerIndex].closed) {
+                        return false;
+                    }
+                    return findObjectIn(containerIndex, locationIndex);
+                }
+
+                return false;
+            }
+
+            //
+            //////////////////////////////////
+
+            //////////////////////////////////
+            // GESTION DES VERBES
+            
+
             // Vérifie si un mot est un synonyme d'un verbe donné
             function matchVerb(word, verbIndex) {
                 return verbs[verbIndex].synonyms.indexOf(word) > -1;
@@ -214,46 +235,11 @@
                 return null;
             }
 
-            let transcript = [];
-            const consoleDiv = document.querySelector("#console");
-            const commandInput = document.querySelector("#command");
+            //
+            //////////////////////////////////
 
-            commandInput.focus();
-
-            // Gestion de la validation de la commande
-            commandInput.addEventListener("keyup", (event) => {
-                if (event.key === "Enter") {
-                    if (parseCommand(commandInput.value)) {
-                        transcript.push(commandInput.value);
-                    } else {
-                        print(`La commande "${commandInput.value}" n'a pas pu être interpretée`);
-                    }
-                    
-                    commandInput.value = "";
-                }
-
-                window.scrollTo(0, document.body.scrollHeight);
-            });
-
-            // Liste des mots à ignorer lors de la phase d'analyse syntaxique
-            const noiseWords = [ "", "DE", "D", "DU", "DES", "LES", "LE", "LA", "L", "AVEC", "DANS", "SUR", "TOUS", "TOUT", "ET", "UN", "UNE", "A", "AU", "MON", "MA", "MES", "SON", "SA", "SES", "TON", "TA", "TES", "POUR", "EN", "FAIRE", "FAIT", "FAIS", "FAITES", "JE", "J" ];
-
-            // Suppression des mots superflus de la phrase
-            function removeNoiseWords(words) {
-                // Supprimer les éléments qui apparaissent dans la liste donnée
-                for (var i = 0; i < noiseWords.length; i++) {
-                    var noiseWord = noiseWords[i];
-                    var index = words.indexOf(noiseWord);
-                    while (index !== -1) {
-                        words.splice(index, 1);
-                        index = words.indexOf(noiseWord);
-                    }
-                }
-
-                return words;
-            }
-
-            let currentLocation = null;
+            //////////////////////////////////
+            // EXECUTION DES COMMANDES
 
             function changeLocation(locationIndex) {
                 if (currentLocation) {
@@ -263,27 +249,6 @@
                 currentLocation = locationIndex;
                 objects[currentLocation].location = 'context';
                 print(objects[currentLocation].description);
-            }
-
-            function displayTranscript() {
-                for (let key in transcript) {
-                    print(`${key} - ${transcript[key]}`)
-                }
-            }
-
-            function displayObjectsIn(location, title, defaultMessage = "rien") {
-                let count = 0;
-                print(title);
-                for(let key in objects) {
-                    if (objects[key].location == location) {
-                        print("- " + objects[key].name);
-                        count ++;
-                    }
-                }
-
-                if (count == 0) {
-                    print("- " + defaultMessage);
-                }
             }
 
             function executeCommand(command) {
@@ -373,6 +338,32 @@
                 }
             }
 
+            //
+            //////////////////////////////////
+
+            //////////////////////////////////
+            // ANALYSE SYNTAXIQUE DE LA SAISIE DU JOUEUR
+
+            // Liste des mots à ignorer lors de la phase d'analyse syntaxique
+            const noiseWords = [ "", "DE", "D", "DU", "DES", "LES", "LE", "LA", "L", "AVEC", "DANS", "SUR", "TOUS", "TOUT", "ET", "UN", "UNE", "A", "AU", "MON", "MA", "MES", "SON", "SA", "SES", "TON", "TA", "TES", "POUR", "EN", "FAIRE", "FAIT", "FAIS", "FAITES", "JE", "J" ];
+
+            // Suppression des mots superflus de la phrase
+            function removeNoiseWords(words) {
+                // Supprimer les éléments qui apparaissent dans la liste donnée
+                for (var i = 0; i < noiseWords.length; i++) {
+                    var noiseWord = noiseWords[i];
+                    var index = words.indexOf(noiseWord);
+                    while (index !== -1) {
+                        words.splice(index, 1);
+                        index = words.indexOf(noiseWord);
+                    }
+                }
+
+                return words;
+            }
+
+            // Convertion de la phrase saisie en une commande sous forme
+            // [verb, objet1, objet2]
             function parseCommand(commandString) {
                 commandString = removeAccents(commandString).toUpperCase();
 
@@ -409,22 +400,84 @@
                 return executeCommand(command);
             }
 
+            //
+            //////////////////////////////////
+
+            //////////////////////////////////
+            // FONCTIONS D'AFFICHAGE
+
+            // Affichage d'une message dans la console du jeu
             function print(message) {
                 let p = document.createElement("p");
                 p.innerHTML = message;
                 consoleDiv.append(p);
             }
 
+            function displayTranscript() {
+                for (let key in transcript) {
+                    print(`${key} - ${transcript[key]}`)
+                }
+            }
+
+            function displayObjectsIn(location, title, defaultMessage = "rien") {
+                let count = 0;
+                print(title);
+                for(let key in objects) {
+                    if (objects[key].location == location) {
+                        print("- " + objects[key].name);
+                        count ++;
+                    }
+                }
+
+                if (count == 0) {
+                    print("- " + defaultMessage);
+                }
+            }
+
+            //
+            //////////////////////////////////
+
+            //////////////////////////////////
+            // INITIALISATION
+
+            // Lieu dans lequel le joueur se trouve actuellement
+            let currentLocation = null;
+
+            // Tableau de transcription des commandes saisies
+            let transcript = [];
+
+            // DIV pour afficher le texte du jeu
+            const consoleDiv = document.querySelector("#console");
+
+            // INPUT de saisie des commandes 
+            const commandInput = document.querySelector("#command");
+
+            commandInput.focus();
+
+            // Gestion de la validation de la commande
+            commandInput.addEventListener("keyup", (event) => {
+                if (event.key === "Enter") {
+                    if (parseCommand(commandInput.value)) {
+                        transcript.push(commandInput.value);
+                    } else {
+                        print(`La commande "${commandInput.value}" n'a pas pu être interpretée`);
+                    }
+                    
+                    commandInput.value = "";
+                }
+
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+
+            // Initialisation de la partie
             function initGame() {
                 changeLocation('salon');
             }
 
             initGame();
-
-            // Fonction pour supprimer les accents d'une chaîne
-            function removeAccents(str) {
-                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            }
+            
+            //
+            //////////////////////////////////
 
         </script>
     </body>
