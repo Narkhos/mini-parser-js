@@ -1,0 +1,220 @@
+<html>
+    <head></head>
+    <body>
+        <div style="width: 100%; height:400px;">
+            <div id="console" style="width: 100%; border: 1px solid;">
+                Bienvenue dans ce tutoriel pour apprendre les bases de la programmation d'un moteur de jeu à analyseur syntaxique simple. Vous pouvez modifier ce petit exemple de démonstration à votre convenance. AMUSEZ-VOUS BIEN !
+            </div>
+            <input style="width: 100%;" type="text" id="command" name="command" />
+            <div id="" style="height: 100px">
+
+            </div>
+        </div>
+
+        <script>
+            // Supprime les accents d'une chaîne
+            function removeAccents(str) {
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+
+            // DIV pour afficher le texte du jeu
+            const consoleDiv = document.querySelector("#console");
+
+            // Affichage d'une message dans la console du jeu
+            function println(message) {
+                let p = document.createElement("p");
+                p.innerHTML = message;
+                consoleDiv.append(p);
+            }
+
+            // INPUT de saisie des commandes 
+            const commandInput = document.querySelector("#command");
+
+            commandInput.focus();
+
+            // Gestion de la validation de la commande
+            commandInput.addEventListener("keyup", (event) => {
+                if (event.key === "Enter") {
+                    executeCommand(parseCommand(commandInput.value));
+
+                    commandInput.value = "";
+                }
+
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+
+            function findObjectIn(objectIndex, locationIndex) {
+
+                if (!objectIndex) return false;
+            
+                if (objectIndex === locationIndex) {
+                    return true;
+                }
+            
+                const containerIndex = objects[objectIndex].location;
+                if (containerIndex) {
+                    return findObjectIn(containerIndex, locationIndex);
+                }
+            
+                return false;
+            }
+
+            // Exécution de la commande identifiée par parseCommand()
+            function executeCommand(command) {
+                if (command.verb) {
+                        switch(command.verb) {
+                            case "nord":
+                            case "sud":
+                            case "est":
+                            case "ouest":
+                                if (objects[currentLocation][command.verb]) {
+                                    changeLocation(objects[currentLocation][command.verb]);
+                                    return;
+                                }
+                                break;
+                            case "examiner":
+                                if(command.object != null) {
+                                    println(objects[command.object].description);
+                                    return;
+                                }
+                                break;
+                        }
+                    println(verbs[command.verb].default);
+                    return;
+                } else {
+                    println("Je ne connais pas ce verbe");
+                    return;
+                }
+            }
+
+            // Vérifie si un mot est un synonyme d'un verbe donné
+            function matchVerb(word, verbIndex) {
+                return verbs[verbIndex].synonyms.indexOf(word) > -1;
+            }
+
+            // Retourne la clé du verbe désigné par un mot donné
+            function getVerbByWord(word) {
+                if (!word) return null;
+
+                word = word.substr(0, 4);
+                for(let key in verbs) {
+                    if (matchVerb(word, key)) {
+                        return key;
+                    }
+                }
+                
+                return null;
+            }
+
+            function matchObject(word, objectIndex) {
+                return objects[objectIndex].synonyms.indexOf(word) > -1;
+            }
+
+            function getObjectByWord(word) {
+                for(let key in objects) {
+                    if (matchObject(word, key)) {
+                        return key;
+                    }
+                }
+                
+                return null;
+            }
+
+            function parseCommand(commandString) {
+                commandString = removeAccents(commandString).toUpperCase();
+
+                let command = {
+                    "verb": null,
+                    "object": null
+                };
+
+                var words = commandString.split(/[ '_.,;:]/);
+
+                if (words.length > 0) {
+                    command.verb = getVerbByWord(words[0]);
+                }
+
+                if (words.length > 1) {
+                    command.object = getObjectByWord(words[1]);
+                }
+
+                if (!findObjectIn(command.object, "context")) {
+                    command.object = null;
+                }
+                
+                return command;
+            }
+
+            // Objets et lieux du monde
+            let objects = {
+                'context':{
+                    'synonyms': ["CONTEXT"],
+                    'name': "contexte",
+                    'location': null,
+                    'description': "Tout ce qui est visible actuellement par le joueur doit être dans le contexte, directement ou indirectement"
+                },
+                'salon':{
+                    'synonyms': ["SALON"],
+                    'name': "le salon",
+                    'location': 'context',
+                    'description': "Un joli salon avec une télévision",
+                    'sud': 'cuisine'
+                },
+                'tele':{
+                    'synonyms': ["TELE", "TELEVISION", "TV"],
+                    'name': "la télévision",
+                    'location': 'salon',
+                    'description': "Un petit poste de télévision"
+                },
+                'cuisine':{
+                    'synonyms': ["CUISINE"],
+                    'name': "la cuisine",
+                    'location': null,
+                    'description': "Une cuisine.",
+                    'nord': 'salon'
+                }
+            };
+
+            // liste des verbes et de leurs synonymes
+            const verbs = {
+                "nord": { // Nord
+                    'synonyms':["NORD", "N", "AVAN"],
+                    'default': "Impossible d'aller vers le nord"
+                },
+                "sud": { // Sud
+                    'synonyms':["SUD", "S", "RECU", "ARRI"],
+                    'default': "Impossible d'aller vers le sud"
+                },
+                "est": { // Est
+                    'synonyms':["EST", "E", "DROI"],
+                    'default': "Impossible d'aller vers l'est"
+                },
+                "ouest": { // Ouest
+                    'synonyms':["OUES", "O", "GAUC"],
+                    'default': "Impossible d'aller vers l'ouest"
+                },
+                "examiner": { // Examiner
+                    'synonyms':["EXAM", "X"],
+                    'default': "Rien de particulier"
+                }
+            };
+
+            // Lieu dans lequel le joueur se trouve actuellement
+            let currentLocation = null;
+
+            // Changement de lieu
+            function changeLocation(locationIndex) {
+                if (currentLocation) {
+                    objects[currentLocation].location = null;
+                }
+
+                currentLocation = locationIndex;
+                objects[currentLocation].location = 'context';
+                println(objects[currentLocation].description);
+            }
+
+            changeLocation('salon');
+
+        </script>
+    </body>
+</html>
